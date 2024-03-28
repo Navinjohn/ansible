@@ -49,6 +49,30 @@
       update_cache: yes
     when: ansible_distribution == "CentOS"
 
+  - name: start httpd (CentOS)
+    tags: apache,centos,httpd
+    service:
+      name: httpd
+      state: started
+      enabled: yes
+    when: ansible_distribution == "CentOS"
+
+  - name: change email address for admin
+    tags: apache,centos,httpd
+    lineinfile:
+      path: /etc/httpd/conf/httpd.conf
+      regex: '^ServerAdmin'
+      line: ServerAdmin somebody@somewhere.net
+    when: ansible_distribution == "CentOs"
+    register: httpd
+
+  - name: restart httpd (CentOS)
+    tags: apache,Centos,httpd
+    service:
+      name: httpd
+      state: restarted
+    when: httpd.changed
+
   - name: copy default html file for site
     tags: apache,apache2,httpd
     copy:
@@ -57,16 +81,6 @@
       owner: root
       group: root
       mode: 0644
-
-## updated and optimized 
-
-  - name: install apache2 and php packages
-    package:
-      name:
-        - "{{ apache_package }}"
-        - "{{ php_package }}"
-      state: latest
-      update_cache: yes
 
 - hosts: db_servers
   become: true
@@ -79,7 +93,7 @@
       state: latest
     when: ansible_distribution == "Ubuntu"
 
-- hosts: file_server
+- hosts: file_servers
   become: true
   tasks:
   - name: Install samba package (Ubuntu)
@@ -88,3 +102,14 @@
       name: samba
       state: latest
     when: ansible_distribution == "Ubuntu"
+
+
+## updated and optimized 
+
+  - name: install apache2 and php packages
+    package:
+      name:
+        - "{{ apache_package }}"
+        - "{{ php_package }}"
+      state: latest
+      update_cache: yes
