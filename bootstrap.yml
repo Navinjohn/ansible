@@ -1,0 +1,36 @@
+---
+- hosts: all
+  become: true
+  pre_tasks:
+
+  - name: install updates (Ubuntu)
+    tags: always
+    apt:
+      upgrade: dist
+      update_cache: yes
+    when: ansible_distribution == "Ubuntu"
+
+- hosts: all
+  become: true
+  tasks:
+
+  - name: create zoro user
+    tags: always
+    user:
+      name: zoro
+      groups: root
+
+  - name: add ssh key for zoro
+    tags: always
+    authorized_key:
+      user: zoro
+      key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINn/eZUx/VPGhhhPgGqybkrYP9s/TdtKJULiS1PqW7c9 ansible"
+
+  - name: add sudoers file for zoro
+    tags: always
+    copy:
+      src: sudoer_zoro
+      dest: /etc/sudoers.d/zoro
+      owner: root
+      group: root
+      mode: 0440
