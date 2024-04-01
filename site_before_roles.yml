@@ -1,0 +1,124 @@
+---
+- hosts: all
+  become: true
+  pre_tasks:
+
+  - name: update repo cache (Ubuntu)
+    tags: always
+    apt:
+      update_cache: yes
+    changed_when: false
+    when: ansible_distribution == "Ubuntu"
+
+- hosts: all
+  become: true
+  tasks:
+  - name: add ssh key for zoro
+    authorized_key:
+      user: zoro
+      key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINn/eZUx/VPGhhhPgGqybkrYP9s/TdtKJULiS1PqW7c9 ansible"
+
+- hosts: workstations
+  become: true
+  tasks:
+
+  - name: install unzip
+    package:
+      name: unzip
+
+  - name: install terraform
+    unarchive:
+      src: https://releases.hashicorp.com/terraform/1.7.5/terraform_1.7.5_linux_arm64.zip
+      dest: /usr/local/bin
+      remote_src: yes
+      mode: 0755
+      owner: root
+      group: root
+
+- hosts: web_server
+  become: true
+  tasks:
+  - name: install apache2 and php packages
+    tags: apache,apache2,ubuntu
+    apt:
+      name:
+        - apache2
+        - libapache2-mod-php
+      state: latest
+      update_cache: yes
+    when: ansible_distribution == "Ubuntu"
+
+  - name: install apache2 and php packages on centos
+    tags: apache,apache2,centos
+    apt:
+      name:
+        - httpd
+        - php
+      state: latest
+      update_cache: yes
+    when: ansible_distribution == "CentOS"
+
+  - name: start httpd (CentOS)
+    tags: apache,centos,httpd
+    service:
+      name: httpd
+      state: started
+      enabled: yes
+    when: ansible_distribution == "CentOS"
+
+  - name: change email address for admin
+    tags: apache,centos,httpd
+    lineinfile:
+      path: /etc/httpd/conf/httpd.conf
+      regex: '^ServerAdmin'
+      line: ServerAdmin somebody@somewhere.net
+    when: ansible_distribution == "CentOs"
+    register: httpd
+
+  - name: restart httpd (CentOS)
+    tags: apache,Centos,httpd
+    service:
+      name: httpd
+      state: restarted
+    when: httpd.changed
+
+  - name: copy default html file for site
+    tags: apache,apache2,httpd
+    copy:
+      src: default_site.html
+      dest: /var/www/html/index.html
+      owner: root
+      group: root
+      mode: 0644
+
+- hosts: db_servers
+  become: true
+  tasks:
+
+  - name: Install mariadb package (Ubuntu)
+    tags: ubuntu,db,mariadb
+    apt:
+      name: mariadb-server
+      state: latest
+    when: ansible_distribution == "Ubuntu"
+
+- hosts: file_servers
+  become: true
+  tasks:
+  - name: Install samba package (Ubuntu)
+    tags: samba
+    apt:
+      name: samba
+      state: latest
+    when: ansible_distribution == "Ubuntu"
+
+
+## updated and optimized 
+
+  - name: install apache2 and php packages
+    package:
+      name:
+        - "{{ apache_package }}"
+        - "{{ php_package }}"
+      state: latest
+      update_cache: yes

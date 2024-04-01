@@ -1,0 +1,5 @@
+#- name: add ssh key for zoro
+ # tags: always
+  #authorized_key:
+   # user: zoro
+    #key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINn/eZUx/VPGhhhPgGqybkrYP9s/TdtKJULiS1PqW7c9 ansible"

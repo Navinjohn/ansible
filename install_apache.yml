@@ -12,7 +12,7 @@
       update_cache: yes
     when: ansible_distribution == "Ubuntu"
 
-- name: install apache2 and php packages on centos
+  - name: install apache2 and php packages on centos
     apt:
       name:
         - httpd
